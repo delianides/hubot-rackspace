@@ -6,15 +6,18 @@ your architecture without having to log into the dashboard.
 Configuration
 -------------
 
-`HUBOT_RACKSPACE_API` - Rackspace API Key
-`HUBOT_RACKSPACE_USERNAME` - Rackspace Username
-`HUBOT_QUOTE_STRING` - The string your chat service uses to display plain text.
-  eg: HipChat = `/quote`
+- `HUBOT_RACKSPACE_API` - Rackspace API Key
+- `HUBOT_RACKSPACE_USERNAME` - Rackspace Username
+- `HUBOT_QUOTE_STRING` - The string your chat service uses to display plain text. eg: HipChat = `/quote`
 
 Usage
 -----
 Right now you can only query Rackspace for the details of your cloud servers,
 cloud load balancers and the DNS entries that you have listed in your account.
+
+- `hubot rack servers`
+- `hubot rack clb`
+- `hubot rack dns example.com`
 
 ```
 > hubot rack servers
