@@ -22,10 +22,12 @@ Table = require "cli-table"
 pkgcloud = require "pkgcloud"
 moment = require "moment"
 
+QUOTE = process.env.HUBOT_QUOTE_STRING || nil
+
 rackspace = {
     provider: 'rackspace',
-    username: process.env.RACKSPACE_USERNAME,
-    apiKey: process.env.RACKSPACE_API,
+    username: process.env.HUBOT_RACKSPACE_USERNAME,
+    apiKey: process.env.HUBOT_RACKSPACE_API,
     region: 'ord'
 }
 
@@ -56,7 +58,7 @@ module.exports = (robot) ->
                 "#{since}"]
             )
       )
-    msg.plain table.toString()
+    msg.send "#{QUOTE} #{table.toString()}"
 
   robot.respond /rack clb/i, (msg) ->
     table = new Table({
@@ -81,7 +83,7 @@ module.exports = (robot) ->
               "#{lbs.nodeCount}"]
             )
       )
-    msg.plain table.toString()
+    msg.send "#{QUOTE} #{table.toString()}"
 
   robot.respond /rack dns (.*)/i, (msg) ->
     domain = escape(msg.match[1])
@@ -112,7 +114,7 @@ module.exports = (robot) ->
                 "#{record.data}",
                 "#{moment.duration((record.ttl/60), "minutes" ).humanize()}"]
               )
-            msg.plain table.toString()
+            msg.send "#{QUOTE} #{table.toString()}"
         )
     )
 
