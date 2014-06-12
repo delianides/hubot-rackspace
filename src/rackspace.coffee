@@ -42,6 +42,7 @@ module.exports = (robot) ->
     for region in REGIONS
       rackspace.region = region
       client = pkgcloud.compute.createClient(rackspace)
+      console.log(client)
       client.getServers((err, servers) ->
         if(err)
           msg.send err
