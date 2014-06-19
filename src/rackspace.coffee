@@ -55,7 +55,7 @@ module.exports = (robot) ->
               ["#{server.name}",
                 "#{asIp(server.original.accessIPv4)}",
                 "#{asIp(server.addresses.private[0].addr)}",
-                "#{region}",
+                "#{server.client.region}",
                 "#{since}"]
             )
       )
