@@ -1,6 +1,6 @@
 {
   "name": "hubot-rackspace",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Hubot script to retrieve data from a Rackspace account.",
   "main": "index.coffee",
   "directories": {
