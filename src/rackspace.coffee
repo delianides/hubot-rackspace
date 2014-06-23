@@ -21,8 +21,11 @@
 Table = require "cli-table"
 pkgcloud = require "pkgcloud"
 moment = require "moment"
+Q = require "q"
+_ = require "underscore"
 
 QUOTE = process.env.HUBOT_QUOTE_STRING || nil
+REGIONS = process.env.HUBOT_RACKSPACE_REGIONS.split ","
 
 rackspace = {
     provider: 'rackspace',
@@ -31,60 +34,54 @@ rackspace = {
     region: 'ord'
 }
 
-REGIONS = ["ord","dfw","iad","syd","hkg"]
-
 module.exports = (robot) ->
   robot.respond /rack servers/i, (msg) ->
     table = new Table({
       head: ['Name', 'Public IP', 'Private IP', 'Region', 'Age'],
       style: { head:[], border:[], 'padding-left': 1, 'padding-right': 1 }
     })
+    calls = []
     for region in REGIONS
-      rackspace.region = region
-      client = pkgcloud.compute.createClient(rackspace)
-      console.log(client)
-      client.getServers((err, servers) ->
-        if(err)
-          msg.send err
-          return false
-        else
-          for server in servers
-            now = moment()
-            since = now.from(server.original.created, true)
-            table.push(
-              ["#{server.name}",
-                "#{asIp(server.original.accessIPv4)}",
-                "#{asIp(server.addresses.private[0].addr)}",
-                "#{server.client.region}",
-                "#{since}"]
-            )
-      )
-    msg.send "#{QUOTE} #{table.toString()}"
+      calls.push(getAllServers(region))
+
+    Q.all(calls).then( (data) ->
+      servers = _.flatten(data, true)
+      for server in servers
+        now = moment()
+        since = now.from(server.original.created, true)
+        table.push(
+          ["#{server.name}",
+            "#{server.original.accessIPv4}",
+            "#{server.addresses.private[0].addr}",
+            "#{server.client.region.toUpperCase()}",
+            "#{since}"]
+        )
+      msg.send "#{QUOTE} #{table.toString()}"
+    )
 
   robot.respond /rack clb/i, (msg) ->
     table = new Table({
-      head: ['Name', 'Protocol', 'Port', 'Public IP', 'Nodes'],
+      head: ['Name', 'Protocol', 'Port', 'Public IP', 'Region', 'Nodes'],
       style: { head:[], border:[], 'padding-left': 1, 'padding-right': 1 }
     })
 
+    calls = []
     for region in REGIONS
-      rackspace.region = region
-      client = pkgcloud.loadbalancer.createClient(rackspace)
-      client.getLoadBalancers((err, loadbalancers) ->
-        if(err)
-          msg.send err
-          return false
-        else
-          for lbs in loadbalancers
-            table.push(
-              ["#{lbs.name}",
-              "#{lbs.protocol}",
-              "#{lbs.port}",
-              "#{asIp(lbs.virtualIps[0].address)}",
-              "#{lbs.nodeCount}"]
-            )
-      )
-    msg.send "#{QUOTE} #{table.toString()}"
+      calls.push(getAllClbs(region))
+
+    Q.all(calls).then( (data) ->
+      clbs = _.flatten(data, true)
+      for lb in clbs
+        table.push(
+          ["#{lb.name}",
+           "#{lb.protocol}",
+           "#{lb.port}",
+           "#{lb.virtualIps[0].address}",
+           "#{lb.client.region.toUpperCase()}",
+           "#{lb.nodeCount}"]
+        )
+      msg.send "#{QUOTE} #{table.toString()}"
+    )
 
   robot.respond /rack dns (.*)/i, (msg) ->
     domain = escape(msg.match[1])
@@ -119,9 +116,25 @@ module.exports = (robot) ->
         )
     )
 
-asIp = (ip) ->
-  if ip == null or ip == ''
-    return "Not Set"
-  else
-    return ip
+getAllClbs = (region) ->
+  deferred = Q.defer()
+  rackspace.region = region
+  client = pkgcloud.loadbalancer.createClient(rackspace)
+  client.getLoadBalancers (err, loadbalancers) ->
+    if(err)
+      deferred.reject(err)
+    else
+      deferred.resolve(loadbalancers)
+  return deferred.promise
+
+getAllServers = (region) ->
+  deferred = Q.defer()
+  rackspace.region = region
+  client = pkgcloud.compute.createClient(rackspace)
+  client.getServers (err, servers) ->
+    if(err)
+      deferred.reject(err)
+    else
+      deferred.resolve(servers)
+  return deferred.promise
 

@@ -20,10 +20,11 @@
   ],
   "dependencies": {
     "coffee-script": "~1.6",
-    "cheerio": "~0.16.0",
     "cli-table": "~0.3.0",
     "pkgcloud": "~0.9.6",
-    "moment": "~2.7.0"
+    "moment": "~2.7.0",
+    "q": "1.0.1",
+    "underscore": "1.6.0"
   },
   "devDependencies": {
     "mocha": "*",
